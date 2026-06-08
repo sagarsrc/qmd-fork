@@ -6,57 +6,54 @@ ASCII only. No Mermaid.
 
 ```mermaid
 flowchart TD
-    A([user query]) --> B[initial BM25 / FTS<br/>searchFTS query]
-    B --> C{strong signal?<br/>top >= 0.85 and gap >= 0.15<br/>and no intent}
-    C -->|yes| D[skip expansion<br/>expanded = []]
-    C -->|no| E[expandQuery<br/>-> lex / vec / hyde]
-    D --> F[route retrieval lists]
+    A([user query]) --> B["initial BM25 + probe"]
+    B --> C{strong signal?}
+    C -->|yes| D["skip expansion"]
+    C -->|no| E["expandQuery: lex/vec/hyde"]
+    D --> F["parallel retrieval:<br/>BM25 + vector search"]
     E --> F
-    F --> G[FTS lists<br/>original + lex<br/>searchFTS]
-    F --> H[vector lists<br/>original + vec + hyde<br/>embedBatch + searchVec]
-    G --> I[weighted RRF fusion<br/>original lists: 2.0<br/>expansion lists: 1.0]
-    H --> I
-    I --> J[top candidateLimit docs<br/>default 40]
-    J --> K[chunk each document<br/>choose best text chunk]
-    K --> L{skipRerank}
-    L -->|true| M[score = 1 / rank]
-    L -->|false| N[rerank selected chunks<br/>cached LLM reranker]
-    N --> O[position-aware blend<br/>RRF rank + rerank score]
-    O --> P
-    M --> P[dedupe by file<br/>filter minScore<br/>slice limit]
-    P --> Q([results])
+    F --> G["RRF fusion + chunk candidates"]
+    G --> H{rerank?}
+    H -->|yes| I["LLM rerank + blend scores"]
+    H -->|no| J["score = 1/rank"]
+    I --> K["dedupe / filter / limit"]
+    J --> K
+    K --> L([results])
 ```
 
 ## Chunking Pipeline
 
 ```mermaid
 flowchart TD
-    A([document text]) --> B[scanBreakPoints<br/>regex markdown signals]
-    B --> C[findCodeFences<br/>start/end fenced zones]
-    C --> D[optional AST breakpoints<br/>only chunkStrategy = auto<br/>mergeBreakPoints regex, ast]
-    D --> E[chunkDocumentWithBreakPoints<br/>charPos -> targetEndPos]
-    E --> F[findBestCutoff<br/>search backward 200 tokens<br/>avoid code fences<br/>score * squared distance decay]
-    F --> G[slice chunk<br/>advance by end - 15% overlap]
-    G --> H[token check if chunkByTokens<br/>split recursively if > 900 toks]
-    H --> I([chunks])
+    A([document text]) --> B["scanBreakPoints + findCodeFences<br/>regex signals + fenced zones"]
+    B --> C{AST?}
+    C -->|chunkStrategy=auto| D["getASTBreakPoints<br/>merge with regex"]
+    C -->|no| E["regex only"]
+    D --> F["chunkDocumentWithBreakPoints<br/>findBestCutoff + slice"]
+    E --> F
+    F --> G{chunkByTokens?}
+    G -->|yes| H["token check + recursive split<br/>if > 900 tokens"]
+    G -->|no| I([chunks])
+    H --> I
 ```
 
 ## Indexing Pipeline
 
 ```mermaid
 flowchart TD
-    A([collection cfg<br/>path + glob]) --> B[fast-glob file scan<br/>ignore default + user dirs<br/>filter hidden path parts]
-    B --> C[for each readable non-empty file]
-    C --> D[normalize relative path<br/>hashContent body<br/>extractTitle body, path]
-    D --> E[findOrMigrateLegacyDocument<br/>exact / case / handelized]
-    E -->|new| F[insertContent<br/>insertDocument]
-    E -->|existing| G{same hash?<br/>title changed?}
-    E -->|changed hash| H[insertContent<br/>updateDocument]
-    G -->|unchanged or updateTitle| I
-    F --> I[rebuildDocumentFTS<br/>normalized CJK]
-    H --> I
-    I --> J[documents_fts row<br/>also protected by<br/>insert/update/delete<br/>triggers]
-    J --> K[deactivate missing<br/>cleanup orphans]
+    A([collection cfg]) --> B["fast-glob scan<br/>ignore + filter hidden"]
+    B --> C["for each file:<br/>hash + title extract"]
+    C --> D["findOrMigrateLegacyDocument"]
+    D -->|new| E["insertContent + insertDocument"]
+    D -->|same hash| F{title changed?}
+    D -->|changed hash| G["insertContent + updateDocument"]
+    F -->|yes| H["updateDocumentTitle"]
+    F -->|no| I["unchanged"]
+    E --> J["rebuildDocumentFTS<br/>CJK normalized"]
+    G --> J
+    H --> J
+    I --> J
+    J --> K["deactivate missing<br/>cleanup orphans"]
 ```
 
 ## Database Schema
@@ -137,13 +134,11 @@ erDiagram
 
 ```mermaid
 flowchart TD
-    A([input path]) --> B{is explicitly virtual?<br/>qmd:... or //collection/...}
-    B -->|yes| C[normalizeVirtualPath<br/>qmd:////x -> qmd://x<br/>//x -> qmd://x]
-    B -->|no| D[filesystem / relative path]
-    C --> E[parseVirtualPath<br/>collectionName<br/>path<br/>optional index query]
-    D --> F[find collection whose root<br/>prefixes absolute path, or<br/>try relative path in each collection]
-    E --> G[getCollectionByName<br/>from store_collections]
-    F --> H[query active document by<br/>collection + relative path]
-    G --> I[resolve collection.pwd, path<br/>absolute filesystem path]
-    H --> J[build virtual result<br/>qmd://collection/path]
+    A([input path]) --> B{virtual?}
+    B -->|yes| C["normalize + parseVirtualPath"]
+    B -->|no| D["detect collection from fs path"]
+    C --> E["getCollectionByName + resolve"]
+    D --> F["query active document"]
+    E --> G([filesystem path])
+    F --> H([virtual path qmd://col/path])
 ```

@@ -70,33 +70,25 @@ graph TD
 
 ```mermaid
 flowchart TD
-    A["CLI/SDK/MCP query"] --> B["Store hybridQuery/structuredSearch"]
-    B --> C["searchFTS(original + lex)"]
-    C --> D["LLM expandQuery if BM25 not strong"]
-    D --> E["LLM embedBatch(original + vec + hyde)"]
-    E --> F["SQLite vectors_vec cosine search"]
-    F --> G["reciprocalRankFusion"]
-    G --> H["chunk selected candidates with regex/AST"]
-    H --> I["LLM rerank selected chunks unless disabled"]
-    I --> J["snippets/context/docids"]
-    J --> K["stdout, SDK result, MCP content/resource"]
+    A["CLI/SDK/MCP query"] --> B["hybridQuery / structuredSearch"]
+    B --> C{"BM25 strong?"}
+    C -->|no| D["expandQuery + embedBatch"]
+    C -->|yes| E["skip expansion"]
+    D --> F["BM25 + vector search"]
+    E --> F
+    F --> G["RRF fusion"]
+    G --> H["chunk + rerank candidates"]
+    H --> I["snippet / context / docids"]
+    I --> J["stdout / SDK / MCP result"]
 ```
 
 ## Indexing Job Flow
 
 ```mermaid
 flowchart TD
-    A["CLI/SDK update"] --> B["load YAML or inline config"]
-    B --> C["syncConfigToDb(store_collections/store_config)"]
-    C --> D["fast-glob markdown files"]
-    D --> E["read UTF-8 body from filesystem"]
-    E --> F["SHA-256 hash and title extraction"]
-    F --> G["insert/update documents + content"]
-    G --> H["rebuild documents_fts with CJK normalization"]
-    H --> I["deactivate missing docs"]
-    I --> J["cleanup orphaned content"]
-    J --> K["CLI/SDK embed"]
-    K --> L["chunkDocumentByTokens"]
-    L --> M["LLM formatDocForEmbedding + embedBatch"]
-    M --> N["content_vectors + vectors_vec"]
+    A["CLI/SDK update"] --> B["load + sync config"]
+    B --> C["reindexCollection: scan / hash / insert / FTS"]
+    C --> D["cleanup: deactivate + orphans"]
+    D --> E["embed: chunk + format + embedBatch"]
+    E --> F["store: content_vectors + vectors_vec"]
 ```

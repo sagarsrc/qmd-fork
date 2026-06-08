@@ -2,18 +2,15 @@
 
 ```mermaid
 flowchart TD
-    A["getDefaultLlamaCpp()"] --> B["LlamaCpp instance<br/>no native load yet"]
-    B --> C["first operation<br/>embed/generate/rank"]
-    C --> D["ensureLlama()<br/>load native runtime"]
-    D --> E["ensure model<br/>embed/gen/rerank"]
-    E --> F["create context(s)<br/>run operation"]
-    F --> G["touchActivity()<br/>reset idle timer"]
-    G --> H["inactivity timeout"]
-    H --> I{"canUnloadLLM()?"}
-    I -->|"yes"| J["dispose idle<br/>contexts"]
-    I -->|"no"| K["reschedule timer<br/>active session/op"]
-    J --> L["keep models loaded<br/>unless opt-in dispose"]
-    K --> L
+    A["getDefaultLlamaCpp()"] --> B["lazy init:<br/>ensureLlama + model + context"]
+    B --> C["run operation<br/>embed / generate / rank"]
+    C --> D["touchActivity()"]
+    D --> E["inactivity timeout"]
+    E --> F{"canUnloadLLM?"}
+    F -->|yes| G["dispose idle contexts"]
+    F -->|no| H["reschedule timer"]
+    G --> I["keep models loaded<br/>unless opt-in dispose"]
+    H --> I
 ```
 
 ## Embedding Pipeline
@@ -47,18 +44,12 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["file content + path"] --> B{"detectLanguage()"}
-    B -->|"unsupported"| C["[] AST breakpoints"]
-    B -->|"supported"| D["ensureInit()<br/>web-tree-sitter"]
-    D --> E["loadGrammar()<br/>cached WASM grammar"]
-    E -->|"fail"| C
-    E --> F["parse source"]
-    F -->|"fail"| C
-    F --> G["getQuery()<br/>cached S-expression"]
-    G --> H["query captures"]
-    H --> I["extractBreakpoints<br/>score + dedupe"]
-    I --> J["AST breakpoints"]
-    J --> K["store.ts<br/>merge with regex"]
-    K --> L["chunkDocumentWith<br/>BreakPoints()"]
+    B -->|unsupported| C["[] AST breakpoints"]
+    B -->|supported| D["init + loadGrammar +<br/>parse source"]
+    D -->|fail| C
+    D --> E["query captures +<br/>extractBreakpoints"]
+    E --> F["AST breakpoints"]
+    F --> G["merge with regex<br/>chunkDocumentWithBreakPoints"]
 ```
 
 ## Model Resolution

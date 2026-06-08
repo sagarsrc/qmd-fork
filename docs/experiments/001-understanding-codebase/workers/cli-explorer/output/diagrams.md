@@ -3,30 +3,18 @@
 ## CLI Command Dispatch Table
 
 ```mermaid
-graph LR
-    CMD["argv[0] command"] --> CAT{Category}
+graph TD
+    CMD["argv command"] --> CAT{category}
 
-    CAT -->|help| H["showHelp / showVersion / showSkill"]
-    CAT -->|context| C["contextAdd / contextList / contextRemove"]
-    CAT -->|get| G["getDocument"]
-    CAT -->|multi-get| MG["multiGet"]
-    CAT -->|ls| LS["listFiles"]
-    CAT -->|collection| COL["collectionAdd / remove / rename / list / update / show"]
-    CAT -->|search| S["search (BM25)"]
-    CAT -->|vsearch| VS["vectorSearch"]
-    CAT -->|query| Q["querySearch (hybrid)"]
-    CAT -->|update| U["updateCollections"]
-    CAT -->|embed| E["vectorIndex"]
-    CAT -->|status| ST["showStatus"]
-    CAT -->|mcp| MCP["startMcpServer / HTTP"]
-    CAT -->|pull| PL["pullModels"]
-    CAT -->|bench| B["runBenchmark"]
-    CAT -->|init| I["initLocalIndex"]
+    CAT --> META["help / version / status / doctor"]
+    CAT --> CFG["context add/list/rm<br/>collection add/rm/rename/list/update<br/>init"]
+    CAT --> DOC["get / multi-get / ls"]
+    CAT --> IDX["update / embed / pull"]
+    CAT --> SRCH["search / vsearch / query / deep-search"]
+    CAT --> SRV["mcp / bench"]
 
-    COL --> IDX["indexFiles (reindexCollection)"]
-    Q --> EXP["expandQuery + hybridSearch"]
-    S --> FTS["searchFTS"]
-    VS --> VEC["searchVec"]
+    SRCH --> SE["searchFTS / searchVec<br/>expandQuery + hybridSearch"]
+    IDX --> IE["reindexCollection<br/>generateEmbeddings<br/>pullModels"]
 ```
 
 ## Output Format Pipeline
@@ -52,10 +40,8 @@ graph TD
 ```mermaid
 graph TD
     A["parseCLI()"] --> B["command dispatch"]
-    B --> C["getStore()<br/>- createStore<br/>- loadConfig<br/>- syncConfigToDb<br/>- setDefaultLlamaCpp"]
-    C --> D["getDb()<br/>active SQLite handle"]
-    D --> E["command work<br/>store/collections/LLM"]
-    E --> F["print output<br/>stdout/stderr"]
-    F --> G["closeDb()<br/>store.close(); null"]
-    G --> H["finishSuccessful...<br/>flush stdout<br/>dispose llama.cpp<br/>flush stderr<br/>process.exitCode = 0"]
+    B --> C["getStore() + getDb()<br/>create / load / sync / open"]
+    C --> D["command work<br/>store / collections / LLM"]
+    D --> E["print output + closeDb"]
+    E --> F["finishSuccessful:<br/>flush + dispose + exitCode = 0"]
 ```

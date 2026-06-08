@@ -77,18 +77,24 @@ graph TD
 ```mermaid
 flowchart TD
     subgraph Index["Indexing"]
-        I1["CLI/SDK update"] --> I2["load config"] --> I3["syncConfigToDb"] --> I4["reindexCollection"] --> I5["scan markdown files"] --> I6["hash + title extract"] --> I7["insert docs + content + FTS"] --> I8["cleanup orphans"]
+        I1["CLI/SDK update"] --> I2["load config + syncConfigToDb"]
+        I2 --> I3["reindexCollection: scan / hash / insert / FTS"]
+        I3 --> I4["cleanup orphans + deactivate missing"]
     end
 
     subgraph Embed["Embedding"]
-        E1["CLI/SDK embed"] --> E2["generateEmbeddings"] --> E3["chunkDocumentByTokens"] --> E4["formatDoc + embedBatch"] --> E5["content_vectors"] --> E6["vectors_vec"]
+        E1["CLI/SDK embed"] --> E2["generateEmbeddings: chunk + format + embedBatch"]
+        E2 --> E3["store: content_vectors + vectors_vec"]
     end
 
     subgraph Search["Search"]
-        S1["CLI/SDK/MCP query"] --> S2["hybridQuery / structuredSearch"] --> S3["BM25 + vector search"] --> S4["LLM expand + embed + rerank"] --> S5["RRF fusion"] --> S6["extractSnippet"] --> S7["formatted result"]
+        S1["CLI/SDK/MCP query"] --> S2["hybridQuery / structuredSearch"]
+        S2 --> S3["BM25 + vector + expand + rerank"]
+        S3 --> S4["RRF fusion + extractSnippet + format"]
     end
 
     subgraph Retrieve["Retrieval"]
-        R1["CLI/SDK/MCP get"] --> R2["findDocument / findDocuments"] --> R3["resolve virtual/docid/path"] --> R4["getDocumentBody"] --> R5["format + line numbers"]
+        R1["CLI/SDK/MCP get"] --> R2["findDocument: resolve path/docid"]
+        R2 --> R3["getDocumentBody + format + line numbers"]
     end
 ```
