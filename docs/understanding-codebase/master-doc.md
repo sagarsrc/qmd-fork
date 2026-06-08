@@ -137,6 +137,15 @@ flowchart TD
 
 QMD first finds likely-relevant documents.
 
+```mermaid
+flowchart TD
+    A["query"] --> B["keyword signal<br/>BM25 / FTS5"]
+    A --> C["semantic signal<br/>embedding search"]
+    B --> D["candidate list"]
+    C --> D
+    D --> E["optional fusion<br/>RRF + rerank"]
+```
+
 - `qmd search` uses **BM25 / FTS5** for exact keyword-style matching.
 - `qmd vsearch` uses **vector similarity** for semantic matching.
 - `qmd query` combines both, optionally expands the query, fuses rankings with RRF, and reranks best chunks.
@@ -147,6 +156,16 @@ This matters because different questions need different signals: exact terms, se
 
 Once candidates exist, QMD maps them back to stable document identities.
 
+```mermaid
+flowchart TD
+    A["candidate result"] --> B["collection name"]
+    A --> C["relative path"]
+    A --> D["content hash"]
+    B --> E["virtual path<br/>qmd://collection/file.md"]
+    C --> E
+    D --> F["docid<br/>#abc123"]
+```
+
 - Documents live inside named **collections**.
 - Results use virtual paths like `qmd://docs/api/auth.md`.
 - Docids like `#abc123` point to content hashes, so they are easy to cite and retrieve later.
@@ -156,6 +175,17 @@ This matters because agents need stable references, not fragile absolute filesys
 ### 3. Context packaging
 
 QMD then returns content in a form useful for the caller.
+
+```mermaid
+flowchart TD
+    A["resolved document"] --> B{"caller needs"}
+    B -->|search| C["snippet + score + docid"]
+    B -->|get| D["full body or line range"]
+    B -->|multi-get| E["batch of documents"]
+    C --> F["CLI / SDK / MCP"]
+    D --> F
+    E --> F
+```
 
 - Search returns ranked files with snippets, scores, docids, and context.
 - `qmd get` returns a full document or a line range.
