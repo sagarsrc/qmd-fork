@@ -1,0 +1,94 @@
+{
+  "fleet_name": "qmd-codebase-exploration",
+  "type": "dag",
+  "config": {
+    "max_concurrent": 5,
+    "provider": "codex",
+    "model": "gpt-5.5",
+    "reasoning_effort": "medium",
+    "max_budget_fleet": 60
+  },
+  "workers": [
+    {
+      "id": "cli-explorer",
+      "type": "write",
+      "task": "Explore QMD CLI layer: src/cli/qmd.ts and src/cli/formatter.ts. Produce module documentation with ASCII diagrams.",
+      "model": "gpt-5.5",
+      "provider": "codex",
+      "reasoning_effort": "medium",
+      "max_budget_usd": 10,
+      "status": "running",
+      "session_name": "fleet-qmd-codebase-exploration-cli-explorer",
+      "started_at": "2026-06-08T06:31:41Z"
+    },
+    {
+      "id": "store-explorer",
+      "type": "write",
+      "task": "Explore QMD Store layer: src/store.ts. Produce module documentation with ASCII diagrams.",
+      "model": "gpt-5.5",
+      "provider": "codex",
+      "reasoning_effort": "medium",
+      "max_budget_usd": 10,
+      "status": "running",
+      "session_name": "fleet-qmd-codebase-exploration-store-explorer",
+      "started_at": "2026-06-08T06:31:45Z"
+    },
+    {
+      "id": "db-coll-explorer",
+      "type": "write",
+      "task": "Explore QMD DB and Collections layer: src/db.ts and src/collections.ts. Produce module documentation with ASCII diagrams.",
+      "model": "gpt-5.5",
+      "provider": "codex",
+      "reasoning_effort": "medium",
+      "max_budget_usd": 10,
+      "status": "running",
+      "session_name": "fleet-qmd-codebase-exploration-db-coll-explorer",
+      "started_at": "2026-06-08T06:31:49Z"
+    },
+    {
+      "id": "llm-ast-explorer",
+      "type": "write",
+      "task": "Explore QMD LLM and AST layer: src/llm.ts and src/ast.ts. Produce module documentation with ASCII diagrams.",
+      "model": "gpt-5.5",
+      "provider": "codex",
+      "reasoning_effort": "medium",
+      "max_budget_usd": 10,
+      "status": "running",
+      "session_name": "fleet-qmd-codebase-exploration-llm-ast-explorer",
+      "started_at": "2026-06-08T06:31:53Z"
+    },
+    {
+      "id": "sdk-mcp-explorer",
+      "type": "write",
+      "task": "Explore QMD SDK, MCP, and support layers: src/index.ts, src/mcp/server.ts, src/paths.ts, src/maintenance.ts. Produce module documentation with ASCII diagrams.",
+      "model": "gpt-5.5",
+      "provider": "codex",
+      "reasoning_effort": "medium",
+      "max_budget_usd": 10,
+      "status": "running",
+      "session_name": "fleet-qmd-codebase-exploration-sdk-mcp-explorer",
+      "started_at": "2026-06-08T06:31:57Z"
+    },
+    {
+      "id": "synthesizer",
+      "type": "write",
+      "task": "Synthesize all explorer outputs into unified L0/L1/L2 documentation of the QMD codebase.",
+      "model": "gpt-5.5",
+      "provider": "codex",
+      "reasoning_effort": "medium",
+      "max_budget_usd": 10,
+      "depends_on": [
+        "cli-explorer",
+        "store-explorer",
+        "db-coll-explorer",
+        "llm-ast-explorer",
+        "sdk-mcp-explorer"
+      ],
+      "status": "running",
+      "session_name": "fleet-qmd-codebase-exploration-synthesizer",
+      "started_at": "2026-06-08T06:36:27Z"
+    }
+  ],
+  "status": "running",
+  "launched_at": "2026-06-08T06:36:27Z"
+}

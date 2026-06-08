@@ -1,0 +1,4 @@
+# Fleet-generated artifacts — keep repo clean
+*.jsonl
+*.out
+*.out.last

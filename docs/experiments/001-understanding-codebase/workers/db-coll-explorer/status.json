@@ -1,0 +1,11 @@
+{
+  "worker_id": "db-coll-explorer",
+  "status": "RUNNING",
+  "task": "Explore QMD DB and Collections layer: src/db.ts and src/collections.ts. Produce module documentation with ASCII diagrams.",
+  "step": "launched",
+  "last_updated": "2026-06-08T06:31:49Z",
+  "session_id": null,
+  "cost_usd": 0,
+  "turns_used": 0,
+  "restarts": 0
+}

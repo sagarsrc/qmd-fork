@@ -1,0 +1,11 @@
+{
+  "worker_id": "llm-ast-explorer",
+  "status": "DONE",
+  "task": "Explore QMD LLM and AST layer: src/llm.ts and src/ast.ts. Produce module documentation with ASCII diagrams.",
+  "step": "outputs written",
+  "last_updated": "2026-06-08T06:35:00Z",
+  "session_id": null,
+  "cost_usd": 0,
+  "turns_used": 0,
+  "restarts": 0
+}

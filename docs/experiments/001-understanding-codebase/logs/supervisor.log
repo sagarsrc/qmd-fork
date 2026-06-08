@@ -1,0 +1,50 @@
+[0;36m[launch][0m Launching [1mcli-explorer[0m (provider=codex, type=write, model=gpt-5.5)
+[0;32m[launch][0m   Window created: qmd-codebase-exploration:cli-explorer
+[0;36m[launch][0m Waiting 3s before next worker...
+[0;36m[launch][0m Launching [1mstore-explorer[0m (provider=codex, type=write, model=gpt-5.5)
+[0;32m[launch][0m   Window created: qmd-codebase-exploration:store-explorer
+[0;36m[launch][0m Waiting 3s before next worker...
+[0;36m[launch][0m Launching [1mdb-coll-explorer[0m (provider=codex, type=write, model=gpt-5.5)
+[0;32m[launch][0m   Window created: qmd-codebase-exploration:db-coll-explorer
+[0;36m[launch][0m Waiting 3s before next worker...
+[0;36m[launch][0m Launching [1mllm-ast-explorer[0m (provider=codex, type=write, model=gpt-5.5)
+[0;32m[launch][0m   Window created: qmd-codebase-exploration:llm-ast-explorer
+[0;36m[launch][0m Waiting 3s before next worker...
+[0;36m[launch][0m Launching [1msdk-mcp-explorer[0m (provider=codex, type=write, model=gpt-5.5)
+[0;32m[launch][0m   Window created: qmd-codebase-exploration:sdk-mcp-explorer
+[0;36m[launch][0m Waiting 3s before next worker...
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer,sdk-mcp-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,db-coll-explorer,llm-ast-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,llm-ast-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,llm-ast-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer,llm-ast-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer
+[0;36m[launch][0m Waiting for dependencies: cli-explorer,store-explorer
+[0;36m[launch][0m Waiting for dependencies: store-explorer
+[0;36m[launch][0m Waiting for dependencies: store-explorer
+[0;36m[launch][0m Waiting for dependencies: store-explorer
+[0;36m[launch][0m Waiting for dependencies: store-explorer
+[0;36m[launch][0m Launching [1msynthesizer[0m (provider=codex, type=write, model=gpt-5.5)
+[0;32m[launch][0m   Window created: qmd-codebase-exploration:synthesizer
+
+[0;32m[launch][0m Fleet '[1mqmd-codebase-exploration[0m[0;32m' launched successfully!
+
+[0;36m[launch][0m Attach to session:  [1mtmux attach -t qmd-codebase-exploration[0m
+[0;36m[launch][0m Monitor window:     [1mtmux attach -t qmd-codebase-exploration:monitor[0m
+[0;36m[launch][0m Kill fleet:         [1mkill.sh /home/sagar/temp/qmd/docs/experiments/001-understanding-codebase all[0m
+
