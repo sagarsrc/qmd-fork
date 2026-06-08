@@ -7,6 +7,25 @@ Top to bottom:
 3. **Subsystems** — DB compatibility (`src/db.ts`), LLM wrapper (`src/llm.ts`), collections/config (`src/collections.ts`), AST chunking (`src/ast.ts`).
 4. **Storage** — SQLite (FTS5 + sqlite-vec), YAML config files, GGUF model cache (see L1-modules: Module Map).
 
+```mermaid
+flowchart TD
+    subgraph Interfaces["Interfaces"]
+        I["CLI / SDK / MCP"]
+    end
+    subgraph Core["Core"]
+        C["Store (src/store.ts)"]
+    end
+    subgraph Subsystems["Subsystems"]
+        S["DB / LLM / Config / AST"]
+    end
+    subgraph Storage["Storage"]
+        D["SQLite / YAML / GGUF"]
+    end
+    I --> C
+    C --> S
+    S --> D
+```
+
 ## What does each module do?
 | Module | File(s) | Responsibility |
 |---|---|---|
@@ -23,61 +42,32 @@ Top to bottom:
 (see L1-modules: Module Map; cli-explorer: Overview; sdk-mcp-explorer: SDK Overview)
 
 ## How does a search query flow through the system?
-```
-CLI / SDK / MCP
-      |
-      v
-  hybridQuery(store, query)
-      |
-      +---> BM25 probe (searchFTS)
-      |
-      +---> strong signal? ---> skip expansion
-      |           no
-      |           v
-      +---> expandQuery (LLM generation)
-      |
-      +---> FTS for lex variants
-      +---> vector search for vec/hyde variants
-      |
-      +---> reciprocalRankFusion (RRF)
-      |
-      +---> chunk candidates, pick best chunk
-      |
-      +---> rerank chunks (optional)
-      |
-      +---> blend RRF position + rerank score
-      |
-      +---> dedupe, filter, limit, snippet, context
-      |
-      v
-  outputResults / SDK return / MCP response
+```mermaid
+flowchart TD
+    A["CLI/SDK/MCP query"] --> B["BM25 probe"]
+    B --> C{strong?}
+    C -->|yes| D["skip expansion"]
+    C -->|no| E["LLM expandQuery"]
+    D --> F["BM25 + vector search"]
+    E --> F
+    F --> G["RRF fusion + chunk"]
+    G --> H["rerank + blend"]
+    H --> I["results"]
 ```
 
 (see L2-implementation: Search Pipeline; store-explorer: Hybrid Search)
 
 ## How does indexing work?
-```
-update command (optional)
-      |
-      v
-fast-glob scan collection
-      |
-      +---> for each file: read, hash, extract title
-      |           |
-      |           v
-      |     compare to existing document
-      |           |
-      |     new/changed ---> insert/update content row
-      |                 ---> insert/update document row
-      |                 ---> rebuild FTS row
-      |     unchanged ---> skip
-      |
-      +---> deactivate missing files
-      |
-      +---> cleanup orphaned content hashes
-      |
-      v
-  suggest embed if needed
+```mermaid
+flowchart TD
+    A["fast-glob scan"] --> B["read + hash + title"]
+    B --> C{exists?}
+    C -->|new| D["insert content + doc"]
+    C -->|changed| E["update doc + FTS"]
+    C -->|same| F["skip"]
+    D --> G["deactivate missing<br/>cleanup orphans"]
+    E --> G
+    F --> G
 ```
 
 (see store-explorer: Indexing; L2-implementation: Indexing & Storage)

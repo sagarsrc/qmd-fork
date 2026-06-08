@@ -2,6 +2,18 @@
 
 ## Chunking
 
+```mermaid
+flowchart TD
+    A["document text"] --> B["scanBreakPoints<br/>regex signals"]
+    B --> C{"AST?"}
+    C -->|auto| D["getASTBreakPoints<br/>merge with regex"]
+    C -->|no| E["regex only"]
+    D --> F["chunkDocumentWith<br/>BreakPoints"]
+    E --> F
+    F --> G["findBestCutoff<br/>slice + overlap"]
+    G --> H([chunks])
+```
+
 ### How does regex chunking work?
 `scanBreakPoints(text)` runs every regex in `BREAK_PATTERNS`, keeps the highest score per character position, and returns sorted breakpoints. `chunkDocumentWithBreakPoints()` slices from the current position to a target end, calls `findBestCutoff()` to replace the end with the best boundary, then advances by `endPos - overlapChars` (see store-explorer: Chunking).
 
@@ -22,6 +34,19 @@ A strong heading farther back can beat a weak newline near the target because of
 `findCodeFences(text)` toggles on newline-prefixed triple backticks. `isInsideCodeFence(pos)` returns true for positions strictly inside a fenced region, so `findBestCutoff` rejects those positions. Cuts are allowed at fence boundaries to keep code blocks intact (see store-explorer: Chunking).
 
 ## Search
+
+```mermaid
+flowchart TD
+    A["user query"] --> B["BM25 probe"]
+    B --> C{strong?}
+    C -->|yes| D["skip expansion"]
+    C -->|no| E["LLM expandQuery"]
+    D --> F["BM25 + vector search"]
+    E --> F
+    F --> G["RRF fusion"]
+    G --> H["rerank + blend"]
+    H --> I([results])
+```
 
 ### What is the full search pipeline?
 `hybridQuery()` in `src/store.ts` executes these steps:
@@ -51,6 +76,20 @@ Raw BM25 scores from FTS5 are lower-is-better and often negative. `searchFTS()` 
 
 ## Embeddings
 
+```mermaid
+flowchart TD
+    A["document chunks"] --> B["formatDocForEmbedding"]
+    B --> C["embedBatch"]
+    C --> D{"fail?"}
+    D -->|yes| E["retry up to 3x"]
+    D -->|no| F["store vectors"]
+    E --> G{"still fail?"}
+    G -->|yes| H["mark pending<br/>remove partial"]
+    G -->|no| F
+    F --> I([content_vectors + vectors_vec])
+    H --> I
+```
+
 ### How are embeddings generated?
 `embedBatch()` in `src/llm.ts` splits texts across a pool of embedding contexts. Each text is tokenized and truncated to the model's context window, then `context.getEmbeddingFor(safeText)` returns a native vector that is converted to a plain `number[]`. Failed individual embeddings return `null` (see llm-ast-explorer: Embedding Generation).
 
@@ -69,6 +108,19 @@ Documents are grouped by hash, then batched by count and byte limit. Chunks are 
 Failures are tracked per `hash:seq` with up to 3 attempts and reason strings truncated to 180 characters. After 64 successful chunks, failed chunks are retried; at batch end, all remaining failures are force-retried. If the active error rate exceeds 80% after at least one batch, the batch is aborted. Incomplete embeddings for a hash are removed so the hash remains pending (see store-explorer: Embeddings Pipeline).
 
 ## Config
+
+```mermaid
+flowchart TD
+    A["loadConfig"] --> B["syncConfigToDb"]
+    B --> C{"hash changed?"}
+    C -->|no| D["skip"]
+    C -->|yes| E["upsert collections"]
+    E --> F["delete stale collections"]
+    F --> G["sync global_context"]
+    G --> H["write new hash"]
+    D --> I([done])
+    H --> I
+```
 
 ### How does local config discovery work?
 `findLocalConfigPath(startDir)` walks upward from the given directory looking for `.qmd/index.yaml` first, then `.qmd/index.yml`. When found, the CLI uses that YAML as the config source and pairs it with `.qmd/index.sqlite` as the database (see db-coll-explorer: Config Resolution).
