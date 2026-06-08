@@ -1,6 +1,13 @@
-# Testing QMD with the Physical Intelligence Vault
+# Testing QMD with a Robotics Research Vault
 
-This guide walks through cloning the [Physical Intelligence Vault](https://github.com/git-kinetix/physical-intelligence-vault) — a research knowledge base of 60 AI/robotics papers — and using QMD to search it.
+This guide walks through cloning the [Physical Intelligence Vault](https://github.com/git-kinetix/physical-intelligence-vault) — a research knowledge base of AI/robotics papers — and using QMD to search it.
+
+The examples intentionally avoid `pi-*` names because `pi` can be confused with the Pi coding harness. Locally, this guide uses:
+
+- folder: `~/robotics-vault`
+- collection name: `robotics-research`
+
+> Note: the vault does **not** appear to contain a standalone `Attention Is All You Need` paper. Attention is still present through simpler transformer-related entries such as `ACT`, `OpenVLA`, `IRIS`, `GR00T`, and `Attentive Probe Accuracy`.
 
 ---
 
@@ -9,27 +16,27 @@ This guide walks through cloning the [Physical Intelligence Vault](https://githu
 ### 1. Clone (without PDFs)
 
 ```bash
-git clone --depth 1 https://github.com/git-kinetix/physical-intelligence-vault.git ~/pi-vault
+git clone --depth 1 https://github.com/git-kinetix/physical-intelligence-vault.git ~/robotics-vault
 
 # Remove PDFs (~700MB) — we only need markdown
-rm -rf ~/pi-vault/PDFs
+rm -rf ~/robotics-vault/PDFs
 
 # Optional: remove other non-markdown bulk
-rm -rf ~/pi-vault/.git ~/pi-vault/.playwright-mcp ~/pi-vault/Explainers
+rm -rf ~/robotics-vault/.git ~/robotics-vault/.playwright-mcp ~/robotics-vault/Explainers
 ```
 
 ### 2. Add to QMD
 
 ```bash
-qmd collection add ~/pi-vault --name pi-research --mask '**/*.md'
+qmd collection add ~/robotics-vault --name robotics-research --mask '**/*.md'
 qmd update
 qmd embed
 ```
 
 **What gets indexed:**
-- `Papers/*.md` — 60 paper summaries with architecture breakdowns
-- `Metrics/*.md` — 64 metric definitions
-- `Datasets/*.md` — 78 dataset descriptions
+- `Papers/*.md` — paper summaries with architecture breakdowns
+- `Metrics/*.md` — metric definitions
+- `Datasets/*.md` — dataset descriptions
 - `MOC.md`, `Metrics Index.md`, `Datasets Index.md` — vault indexes
 
 ---
@@ -41,15 +48,17 @@ qmd embed
 Fast BM25 search. Good for names, acronyms, exact terms.
 
 ```bash
-# Acronyms
-qmd search "JEPA"
-qmd search "VLA"
-qmd search "TD-MPC2"
+# Attention / transformer terms available in the vault
+qmd search "attention"
+qmd search "transformer"
+qmd search "cross-attention"
+qmd search "Attentive Probe Accuracy"
 
-# Specific methods/models
-qmd search "DreamerV3"
-qmd search "Gemini Robotics"
+# Specific simpler transformer/robotics papers
+qmd search "ACT"
 qmd search "OpenVLA"
+qmd search "IRIS"
+qmd search "GR00T"
 
 # Metrics
 qmd search "FVD"
@@ -66,14 +75,17 @@ qmd search "BridgeData V2"
 Semantic/meaning-based. Good when you don't know the exact name.
 
 ```bash
-# Concepts
-qmd vsearch "predicting future states from video"
+# Attention / transformer concepts
+qmd vsearch "attention mechanism for selecting important tokens"
+qmd vsearch "transformers that predict sequences of robot actions"
+qmd vsearch "using cross attention to aggregate visual tokens"
+qmd vsearch "world models based on autoregressive transformers"
+
+# Robotics concepts
 qmd vsearch "robot learning from human demonstrations"
-qmd vsearch "embedding spaces for video understanding"
-qmd vsearch "physics-based character animation"
-qmd vsearch "transfer from simulation to real world"
-qmd vsearch "generating video for robot planning"
+qmd vsearch "vision language action models for robots"
 qmd vsearch "evaluating robotic manipulation"
+qmd vsearch "transfer from simulation to real world"
 ```
 
 ### Hybrid Search (`qmd query`) — Recommended
@@ -81,44 +93,41 @@ qmd vsearch "evaluating robotic manipulation"
 Combines keyword + vector + LLM query expansion. Best for complex questions.
 
 ```bash
-# What/How questions
-qmd query "what is JEPA and how does it work"
-qmd query "what is a world model in robotics"
-qmd query "how does video generation help robot planning"
+# What/How questions — simple attention/transformer examples
+qmd query "what is attention used for in robot policies"
+qmd query "what is ACT and how does action chunking work"
+qmd query "how do transformers predict future robot actions"
+qmd query "what is attentive probe accuracy"
 
 # Comparisons
-qmd query "compare world models to VLA models"
-qmd query "how does DreamerV3 differ from DreamerV2"
-qmd query "JEPA vs V-JEPA vs I-JEPA"
+qmd query "compare ACT OpenVLA and GR00T"
+qmd query "how does IRIS use transformers as a world model"
+qmd query "how do VLA models differ from world models"
 
 # Cross-cutting (finds connections across papers)
-qmd query "which papers use joint embedding architectures"
-qmd query "how have world models evolved from Dreamer to JEPA"
-qmd query "papers that combine video generation with control"
+qmd query "which papers use transformer architectures"
+qmd query "which papers use attention or cross attention"
+qmd query "papers that combine vision language and robot actions"
 
 # Metric-centric
 qmd query "what metrics measure robotic success"
-qmd query "what is PSNR and which papers report it"
-qmd query "metrics for video quality in world models"
+qmd query "what is attentive probe accuracy and why use it"
+qmd query "what metrics evaluate video quality"
 
 # Dataset-centric
 qmd query "datasets for training robot manipulation"
-qmd query "papers that use EPIC-KITCHENS dataset"
+qmd query "what is Open X-Embodiment used for"
 qmd query "benchmarks for sim-to-real transfer"
 
 # Architecture deep-dives
-qmd query "encoder decoder architectures in robotics"
-qmd query "transformer architectures for robot control"
-qmd query "how does ACT-JEPA architecture work"
+qmd query "transformer encoder decoder architectures in robotics"
+qmd query "how does cross attention appear in robot policies"
+qmd query "how does ACT use a transformer decoder"
 
 # Method categories
-qmd query "methods for sim to real transfer"
-qmd query "temporal difference learning in world models"
-qmd query "reinforcement learning for character animation"
-
-# Negative space (finds what's NOT there)
-qmd query "reinforcement learning without simulators"
-qmd query "robot learning without human demonstrations"
+qmd query "imitation learning with transformers"
+qmd query "vision language action transformer models"
+qmd query "world models with discrete tokens and transformers"
 ```
 
 ### Direct Retrieval (`qmd get`)
@@ -126,36 +135,42 @@ qmd query "robot learning without human demonstrations"
 When you know exactly what you want.
 
 ```bash
-# Specific paper
-qmd get pi-research/Papers/V-JEPA\ 2.md
+# Transformer/attention-related papers
+qmd get robotics-research/Papers/ACT.md
+qmd get robotics-research/Papers/OpenVLA.md
+qmd get robotics-research/Papers/IRIS.md
+qmd get robotics-research/Papers/GR00T.md
 
-# Metric definition
-qmd get pi-research/Metrics/FVD.md
+# Attention-related metric definition
+qmd get robotics-research/Metrics/Attentive\ Probe\ Accuracy.md
 
 # Dataset description
-qmd get pi-research/Datasets/BridgeData\ V2.md
+qmd get robotics-research/Datasets/Open\ X-Embodiment.md
 
 # Master index
-qmd get pi-research/MOC.md
+qmd get robotics-research/MOC.md
 
 # By docid (shown in search results as #abc123)
 qmd get "#abc123"
 
 # Line ranges
-qmd get pi-research/Papers/DreamerV3.md:10:30
+qmd get robotics-research/Papers/ACT.md:20:35
 ```
 
 ### Multi-Document Retrieval (`qmd multi-get`)
 
 ```bash
-# All papers in a category
+# All papers
 qmd multi-get "Papers/*.md"
 
 # All metrics
 qmd multi-get "Metrics/*.md"
 
-# Specific papers by comma-separated list
-qmd multi-get "Papers/JEPA*, Papers/V-JEPA*"
+# Specific attention/transformer docs by comma-separated list
+qmd multi-get "Papers/ACT.md, Papers/OpenVLA.md, Papers/IRIS.md, Metrics/Attentive Probe Accuracy.md"
+
+# Transformer-related paper names (glob where possible)
+qmd multi-get "Papers/*VLA*.md, Papers/ACT.md, Papers/IRIS.md"
 
 # With output format
 qmd multi-get "Papers/*.md" --format md
@@ -168,13 +183,13 @@ qmd multi-get "Metrics/*.md" --format json
 
 ```bash
 # Add intent for disambiguation
-qmd query "transformer" --intent "robotics vision language action"
+qmd query "attention" --intent "robotics transformer architectures and action policies"
 
 # More results
-qmd query "world models" -n 20
+qmd query "transformer robot policies" -n 20
 
 # JSON output for scripting
-qmd query "JEPA" --format json
+qmd query "attention in robot policies" --format json
 
 # Minimum score threshold
 qmd query "character animation" --min-score 0.5
@@ -183,10 +198,10 @@ qmd query "character animation" --min-score 0.5
 qmd query "VLA models" --no-rerank
 
 # With line numbers (default)
-qmd get pi-research/Papers/V-JEPA\ 2.md --line-numbers
+qmd get robotics-research/Papers/ACT.md --line-numbers
 
 # Without line numbers
-qmd get pi-research/Papers/V-JEPA\ 2.md --no-line-numbers
+qmd get robotics-research/Papers/ACT.md --no-line-numbers
 ```
 
 ---
@@ -208,7 +223,7 @@ qmd get pi-research/Papers/V-JEPA\ 2.md --no-line-numbers
 **"No collections found"**
 ```bash
 qmd collection list
-# Ensure pi-research appears
+# Ensure robotics-research appears
 ```
 
 **"sqlite-vec unavailable"**
