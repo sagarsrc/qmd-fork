@@ -61,19 +61,17 @@ graph TD
 
 ```mermaid
 graph TD
-    subgraph "CollectionConfig YAML"
-        Y1["global_context: &quot;...applies to all...&quot;<br/>editor_uri: &quot;...&quot;<br/>editor_uri_template: &quot;...&quot;<br/>models:<br/>  embed: &quot;...&quot;<br/>  rerank: &quot;...&quot;<br/>  generate: &quot;...&quot;<br/>collections:<br/>  notes:<br/>    path: &quot;/abs/path/to/notes&quot;<br/>    pattern: &quot;**/*.md&quot;<br/>    ignore:<br/>      - &quot;Archive/**&quot;<br/>    update: &quot;git pull&quot;<br/>    includeByDefault: false<br/>    context:<br/>      &quot;/&quot;: &quot;root collection context&quot;<br/>      &quot;/2024&quot;: &quot;more specific context&quot;<br/>      &quot;/2024/board&quot;: &quot;most specific context&quot;<br/>  work:<br/>    path: &quot;/abs/path/to/work&quot;<br/>    pattern: &quot;**/*.md&quot;"]
+    subgraph "YAML source"
+        Y["~/.config/qmd/index.yml<br/>.qmd/index.yaml"]
     end
 
-    Y1 --> S1
+    Y --> S["store_collections table"]
+    Y --> C["store_config table<br/>global_context<br/>config_hash"]
 
-    subgraph "SQLite mirror"
-        S1["store_collections<br/>  name: notes<br/>  path: /abs/path/to/notes<br/>  pattern: **/*.md<br/>  ignore_patterns: JSON string or NULL<br/>  include_by_default: 0 or 1<br/>  update_command: string or NULL<br/>  context: JSON ContextMap or NULL<br/><br/>store_config<br/>  global_context: string or absent<br/>  config_hash: sha256(JSON config)"]
-    end
+    S --> L["Context lookup<br/>longest prefix match"]
+    C --> L
 
-    S1 --> L1
-
-    subgraph "Context lookup"
-        L1["input: collectionName + filePath<br/>normalize to leading slash<br/>collect matching context prefixes<br/>sort by longest prefix<br/>return most specific match<br/>otherwise return global_context"]
-    end
+    style Y fill:#e1f5fe
+    style S fill:#e8f5e9
+    style C fill:#e8f5e9
 ```

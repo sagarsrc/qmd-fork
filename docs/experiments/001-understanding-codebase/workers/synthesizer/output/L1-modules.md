@@ -76,19 +76,19 @@ graph TD
 
 ```mermaid
 flowchart TD
-    subgraph Indexing["Indexing"]
-        I1["CLI/SDK update"] --> I2["collections YAML/inline config"] --> I3["syncConfigToDb(store_collections, store_config)"] --> I4["store.reindexCollection()"] --> I5["markdown files"] --> I6["hashContent() / extractTitle()"] --> I7["content + documents + documents_fts"] --> I8["cleanup inactive/orphaned rows"]
+    subgraph Index["Indexing"]
+        I1["CLI/SDK update"] --> I2["load config"] --> I3["syncConfigToDb"] --> I4["reindexCollection"] --> I5["scan markdown files"] --> I6["hash + title extract"] --> I7["insert docs + content + FTS"] --> I8["cleanup orphans"]
     end
 
-    subgraph Embedding["Embedding"]
-        E1["CLI/SDK embed"] --> E2["store.generateEmbeddings()"] --> E3["chunkDocumentByTokens(regex + optional AST)"] --> E4["LLM formatDocForEmbedding() + embedBatch()"] --> E5["content_vectors metadata"] --> E6["vectors_vec sqlite-vec table"]
+    subgraph Embed["Embedding"]
+        E1["CLI/SDK embed"] --> E2["generateEmbeddings"] --> E3["chunkDocumentByTokens"] --> E4["formatDoc + embedBatch"] --> E5["content_vectors"] --> E6["vectors_vec"]
     end
 
     subgraph Search["Search"]
-        S1["CLI/SDK/MCP query"] --> S2["store.hybridQuery() or structuredSearch()"] --> S3["searchFTS() and/or searchVec()"] --> S4["LLM expandQuery(), embedBatch(), rerank()"] --> S5["reciprocalRankFusion()"] --> S6["extractSnippet()"] --> S7["CLI/SDK/MCP formatted result"]
+        S1["CLI/SDK/MCP query"] --> S2["hybridQuery / structuredSearch"] --> S3["BM25 + vector search"] --> S4["LLM expand + embed + rerank"] --> S5["RRF fusion"] --> S6["extractSnippet"] --> S7["formatted result"]
     end
 
-    subgraph Retrieval["Retrieval"]
-        R1["CLI/SDK/MCP get or multi_get"] --> R2["store.findDocument()/findDocuments()"] --> R3["virtual/docid/path/glob resolution"] --> R4["getDocumentBody()"] --> R5["addLineNumbers()/formatters/resources"]
+    subgraph Retrieve["Retrieval"]
+        R1["CLI/SDK/MCP get"] --> R2["findDocument / findDocuments"] --> R3["resolve virtual/docid/path"] --> R4["getDocumentBody"] --> R5["format + line numbers"]
     end
 ```

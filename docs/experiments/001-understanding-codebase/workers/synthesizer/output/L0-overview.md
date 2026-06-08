@@ -47,8 +47,16 @@ graph TD
         AST_MOD["src/ast.ts<br/>tree-sitter"]
     end
 
-    subgraph DataStores["Data stores"]
-        DS["YAML config → SQLite mirror → content/docs/FTS/vectors<br/>markdown files → content hashes → embeddings<br/>~/.cache/qmd/models GGUF model cache"]
+    subgraph ConfigStore["Config store"]
+        CFG["~/.config/qmd/*.yml<br/>.qmd/index.yaml"]
+    end
+
+    subgraph DocStore["Document store"]
+        SQLITE["SQLite: documents/content/FTS<br/>vectors_vec / store_collections<br/>store_config / llm_cache"]
+    end
+
+    subgraph ModelStore["Model store"]
+        MODELS["~/.cache/qmd/models<br/>GGUF embeddings + reranker"]
     end
 
     CLI_EXT --> CLI_RUN
@@ -66,9 +74,9 @@ graph TD
     STORE --> LLM_MOD
     STORE --> AST_MOD
 
-    COLL --> DS
-    LLM_MOD --> DS
-    AST_MOD --> DS
+    COLL --> CFG
+    STORE --> SQLITE
+    LLM_MOD --> MODELS
 ```
 
 ## Tech Stack Summary
