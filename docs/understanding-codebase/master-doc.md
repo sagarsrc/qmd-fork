@@ -121,6 +121,60 @@ It is not trying to replace enterprise search. It is trying to make local markdo
 
 ---
 
+## How is QMD structured?
+
+QMD has four main layers: interfaces, core store, subsystems, and storage.
+
+```mermaid
+flowchart TD
+    A["Interfaces<br/>CLI / SDK / MCP"] --> B["Core store<br/>src/store.ts"]
+    B --> C["Subsystems<br/>DB / LLM / Config / AST"]
+    C --> D["Storage<br/>SQLite / YAML / GGUF"]
+```
+
+**What:** User-facing interfaces stay thin. The store owns the real indexing, retrieval, chunking, and search orchestration.
+
+**Why:** This keeps behavior consistent across CLI, SDK, and MCP. If search changes in `src/store.ts`, all interfaces benefit.
+
+## How does search flow internally?
+
+```mermaid
+flowchart TD
+    A["CLI / SDK / MCP query"] --> B["BM25 probe"]
+    B --> C{"strong?"}
+    C -->|yes| D["skip expansion"]
+    C -->|no| E["LLM expandQuery"]
+    D --> F["BM25 + vector search"]
+    E --> F
+    F --> G["RRF fusion + chunk"]
+    G --> H["rerank + blend"]
+    H --> I["results"]
+```
+
+**What:** Search starts with a cheap BM25 probe, then optionally expands into lexical, semantic, and HyDE queries.
+
+**Why:** Cheap exact matching handles obvious queries quickly; hybrid retrieval helps when wording differs from document text.
+
+## How does indexing flow internally?
+
+```mermaid
+flowchart TD
+    A["fast-glob scan"] --> B["read + hash + title"]
+    B --> C{"exists?"}
+    C -->|new| D["insert content + doc"]
+    C -->|changed| E["update doc + FTS"]
+    C -->|same| F["skip"]
+    D --> G["deactivate missing<br/>cleanup orphans"]
+    E --> G
+    F --> G
+```
+
+**What:** Indexing scans configured collections, hashes files, updates changed docs, and keeps FTS rows current.
+
+**Why:** Hash-based indexing avoids unnecessary writes and lets QMD deduplicate content while detecting real file changes.
+
+---
+
 ## Retrieval in QMD
 
 Retrieval in QMD means: turn a user question or document identifier into useful markdown content with enough context for a human or agent to act on it.
@@ -146,11 +200,13 @@ flowchart TD
     D --> E["optional fusion<br/>RRF + rerank"]
 ```
 
+**What:** QMD builds a candidate set using lexical search, semantic search, or both.
+
+**Why:** Different questions need different signals: exact names, semantic meaning, or a blend of both.
+
 - `qmd search` uses **BM25 / FTS5** for exact keyword-style matching.
 - `qmd vsearch` uses **vector similarity** for semantic matching.
 - `qmd query` combines both, optionally expands the query, fuses rankings with RRF, and reranks best chunks.
-
-This matters because different questions need different signals: exact terms, semantic meaning, or both.
 
 ### 2. Document resolution
 
@@ -166,11 +222,13 @@ flowchart TD
     D --> F["docid<br/>#abc123"]
 ```
 
+**What:** QMD turns search hits into stable identifiers: collection, relative path, virtual path, and docid.
+
+**Why:** Agents need stable references they can cite and retrieve later, not fragile absolute filesystem paths.
+
 - Documents live inside named **collections**.
 - Results use virtual paths like `qmd://docs/api/auth.md`.
 - Docids like `#abc123` point to content hashes, so they are easy to cite and retrieve later.
-
-This matters because agents need stable references, not fragile absolute filesystem paths.
 
 ### 3. Context packaging
 
@@ -187,12 +245,14 @@ flowchart TD
     E --> F
 ```
 
+**What:** QMD packages the resolved document as a snippet, full body, line range, or batch.
+
+**Why:** Retrieval is not just “find a file”; it is “return the right evidence in the right shape.”
+
 - Search returns ranked files with snippets, scores, docids, and context.
 - `qmd get` returns a full document or a line range.
 - `qmd multi-get` batches documents for agent workflows.
 - MCP and SDK expose the same retrieval path programmatically.
-
-This matters because retrieval is not just “find a file”; it is “return the right evidence in the right shape.”
 
 ## Mental Model
 
