@@ -17,29 +17,58 @@ QMD makes a personal or project markdown corpus searchable by both exact lexical
 
 ## System Architecture
 
-```text
-+-----------------------+       +-----------------------+       +-----------------------+
-| External interfaces   |       | Runtime facades       |       | Core engine           |
-|-----------------------|       |-----------------------|       |-----------------------|
-| CLI argv/stdout/stderr| ----> | src/cli/qmd.ts        | ----> | src/store.ts          |
-| SDK TypeScript API    | ----> | src/index.ts          | ----> | indexing/search/cache |
-| MCP stdio / HTTP      | ----> | src/mcp/server.ts     | ----> | retrieval/chunking    |
-+-----------------------+       +-----------+-----------+       +-----+-----------+-----+
-                                            |                         |           |
-                                            v                         v           v
-                                +-----------------------+   +--------------+ +--------------+
-                                | Config/collections    |   | LLM layer    | | AST chunking |
-                                | src/collections.ts    |   | src/llm.ts   | | src/ast.ts   |
-                                | YAML source of truth  |   | GGUF models  | | tree-sitter  |
-                                +-----------+-----------+   +------+-------+ +------+-------+
-                                            |                      |                |
-                                            v                      v                v
-                                +----------------------------------------------------------+
-                                | Data stores                                              |
-                                | YAML config -> SQLite mirror -> content/docs/FTS/vectors |
-                                | markdown files -> content hashes -> embeddings           |
-                                | ~/.cache/qmd/models GGUF model cache                     |
-                                +----------------------------------------------------------+
+```mermaid
+graph TD
+    subgraph External["External interfaces"]
+        CLI_EXT["CLI argv/stdout/stderr"]
+        SDK_EXT["SDK TypeScript API"]
+        MCP_EXT["MCP stdio / HTTP"]
+    end
+
+    subgraph Runtime["Runtime facades"]
+        CLI_RUN["src/cli/qmd.ts"]
+        SDK_RUN["src/index.ts"]
+        MCP_RUN["src/mcp/server.ts"]
+    end
+
+    subgraph Core["Core engine"]
+        STORE["src/store.ts<br/>indexing/search/cache<br/>retrieval/chunking"]
+    end
+
+    subgraph ConfigCollections["Config/collections"]
+        COLL["src/collections.ts<br/>YAML source of truth"]
+    end
+
+    subgraph LLMLayer["LLM layer"]
+        LLM_MOD["src/llm.ts<br/>GGUF models"]
+    end
+
+    subgraph ASTChunking["AST chunking"]
+        AST_MOD["src/ast.ts<br/>tree-sitter"]
+    end
+
+    subgraph DataStores["Data stores"]
+        DS["YAML config → SQLite mirror → content/docs/FTS/vectors<br/>markdown files → content hashes → embeddings<br/>~/.cache/qmd/models GGUF model cache"]
+    end
+
+    CLI_EXT --> CLI_RUN
+    SDK_EXT --> SDK_RUN
+    MCP_EXT --> MCP_RUN
+
+    CLI_RUN --> STORE
+    SDK_RUN --> STORE
+    MCP_RUN --> STORE
+
+    CLI_RUN --> COLL
+    SDK_RUN --> COLL
+    MCP_RUN --> COLL
+
+    STORE --> LLM_MOD
+    STORE --> AST_MOD
+
+    COLL --> DS
+    LLM_MOD --> DS
+    AST_MOD --> DS
 ```
 
 ## Tech Stack Summary

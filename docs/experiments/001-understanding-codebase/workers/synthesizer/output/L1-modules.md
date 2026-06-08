@@ -19,49 +19,45 @@ Approximate LOC values are estimates from explorer inventories and subsystem bre
 
 ## Layer Diagram
 
-```text
-                         +-------------------------------+
-                         | External callers              |
-                         | CLI / SDK users / MCP clients |
-                         +---------------+---------------+
-                                         |
-                  +----------------------+----------------------+
-                  |                                             |
-                  v                                             v
-        +-------------------+                         +-------------------+
-        | CLI               |                         | SDK               |
-        | src/cli/qmd.ts    |                         | src/index.ts      |
-        +---------+---------+                         +---------+---------+
-                  |                                             |
-                  +----------------------+----------------------+
-                                         |
-                                         v
-                         +-------------------------------+
-                         | Store                         |
-                         | src/store.ts                  |
-                         | docs/content/FTS/vectors/cache|
-                         +---+-----------+-----------+---+
-                             |           |           |
-            +----------------+           |           +----------------+
-            v                            v                            v
-+---------------------+      +---------------------+      +---------------------+
-| DB compatibility    |      | LLM                 |      | Collections/config  |
-| src/db.ts           |      | src/llm.ts          |      | src/collections.ts  |
-| Bun/Node SQLite     |      | embed/gen/rerank    |      | YAML/local/inline   |
-+----------+----------+      +----------+----------+      +----------+----------+
-           |                            |                            |
-           v                            v                            v
-+---------------------+      +---------------------+      +---------------------+
-| SQLite DB           |      | GGUF model cache    |      | YAML config files   |
-| FTS5 + sqlite-vec   |      | ~/.cache/qmd/models |      | .qmd/index.yaml     |
-+---------------------+      +---------------------+      +---------------------+
+```mermaid
+graph TD
+    EXT["External callers<br/>CLI / SDK users / MCP clients"]
 
-Sidecars:
-+---------------------+      +---------------------+      +---------------------+
-| MCP                 |      | AST                 |      | Maintenance         |
-| src/mcp/server.ts   |      | src/ast.ts          |      | src/maintenance.ts  |
-| stdio/HTTP tools    |      | tree-sitter breaks  |      | cleanup/vacuum      |
-+---------------------+      +---------------------+      +---------------------+
+    CLI["CLI<br/>src/cli/qmd.ts"]
+    SDK["SDK<br/>src/index.ts"]
+
+    STORE["Store<br/>src/store.ts<br/>docs/content/FTS/vectors/cache"]
+
+    DB_COMPAT["DB compatibility<br/>src/db.ts<br/>Bun/Node SQLite"]
+    LLM["LLM<br/>src/llm.ts<br/>embed/gen/rerank"]
+    COLL2["Collections/config<br/>src/collections.ts<br/>YAML/local/inline"]
+
+    SQLITE["SQLite DB<br/>FTS5 + sqlite-vec"]
+    GGUF["GGUF model cache<br/>~/.cache/qmd/models"]
+    YAML["YAML config files<br/>.qmd/index.yaml"]
+
+    MCP_SIDE["MCP sidecar<br/>src/mcp/server.ts<br/>stdio/HTTP tools"]
+    AST_SIDE["AST sidecar<br/>src/ast.ts<br/>tree-sitter breaks"]
+    MAINT_SIDE["Maintenance sidecar<br/>src/maintenance.ts<br/>cleanup/vacuum"]
+
+    EXT --> CLI
+    EXT --> SDK
+
+    CLI --> STORE
+    SDK --> STORE
+
+    STORE --> DB_COMPAT
+    STORE --> LLM
+    STORE --> COLL2
+
+    DB_COMPAT --> SQLITE
+    LLM --> GGUF
+    COLL2 --> YAML
+
+    MCP_SIDE -.-> CLI
+    MCP_SIDE -.-> SDK
+    AST_SIDE -.-> STORE
+    MAINT_SIDE -.-> STORE
 ```
 
 ## Interface Boundaries
@@ -78,38 +74,21 @@ Sidecars:
 
 ## Data Flow Between Modules
 
-```text
-Indexing:
-CLI/SDK update
-  > collections YAML/inline config
-  > syncConfigToDb(store_collections, store_config)
-  > store.reindexCollection()
-  > markdown files
-  > hashContent() / extractTitle()
-  > content + documents + documents_fts
-  > cleanup inactive/orphaned rows
+```mermaid
+flowchart TD
+    subgraph Indexing["Indexing"]
+        I1["CLI/SDK update"] --> I2["collections YAML/inline config"] --> I3["syncConfigToDb(store_collections, store_config)"] --> I4["store.reindexCollection()"] --> I5["markdown files"] --> I6["hashContent() / extractTitle()"] --> I7["content + documents + documents_fts"] --> I8["cleanup inactive/orphaned rows"]
+    end
 
-Embedding:
-CLI/SDK embed
-  > store.generateEmbeddings()
-  > chunkDocumentByTokens(regex + optional AST)
-  > LLM formatDocForEmbedding() + embedBatch()
-  > content_vectors metadata
-  > vectors_vec sqlite-vec table
+    subgraph Embedding["Embedding"]
+        E1["CLI/SDK embed"] --> E2["store.generateEmbeddings()"] --> E3["chunkDocumentByTokens(regex + optional AST)"] --> E4["LLM formatDocForEmbedding() + embedBatch()"] --> E5["content_vectors metadata"] --> E6["vectors_vec sqlite-vec table"]
+    end
 
-Search:
-CLI/SDK/MCP query
-  > store.hybridQuery() or structuredSearch()
-  > searchFTS() and/or searchVec()
-  > LLM expandQuery(), embedBatch(), rerank()
-  > reciprocalRankFusion()
-  > extractSnippet()
-  > CLI/SDK/MCP formatted result
+    subgraph Search["Search"]
+        S1["CLI/SDK/MCP query"] --> S2["store.hybridQuery() or structuredSearch()"] --> S3["searchFTS() and/or searchVec()"] --> S4["LLM expandQuery(), embedBatch(), rerank()"] --> S5["reciprocalRankFusion()"] --> S6["extractSnippet()"] --> S7["CLI/SDK/MCP formatted result"]
+    end
 
-Retrieval:
-CLI/SDK/MCP get or multi_get
-  > store.findDocument()/findDocuments()
-  > virtual/docid/path/glob resolution
-  > getDocumentBody()
-  > addLineNumbers()/formatters/resources
+    subgraph Retrieval["Retrieval"]
+        R1["CLI/SDK/MCP get or multi_get"] --> R2["store.findDocument()/findDocuments()"] --> R3["virtual/docid/path/glob resolution"] --> R4["getDocumentBody()"] --> R5["addLineNumbers()/formatters/resources"]
+    end
 ```
