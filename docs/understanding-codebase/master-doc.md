@@ -1,6 +1,6 @@
-# Retrieval in QMD
+# QMD Master Doc
 
-## What are the key parts of retrieval?
+## Retrieval in QMD
 
 Retrieval in QMD means: turn a user question or document identifier into useful markdown content with enough context for a human or agent to act on it.
 
@@ -12,7 +12,7 @@ flowchart TD
     D --> E["CLI / SDK / MCP output"]
 ```
 
-## 1. Candidate discovery
+### 1. Candidate discovery
 
 QMD first finds likely-relevant documents.
 
@@ -22,7 +22,7 @@ QMD first finds likely-relevant documents.
 
 This matters because different questions need different signals: exact terms, semantic meaning, or both.
 
-## 2. Document resolution
+### 2. Document resolution
 
 Once candidates exist, QMD maps them back to stable document identities.
 
@@ -32,7 +32,7 @@ Once candidates exist, QMD maps them back to stable document identities.
 
 This matters because agents need stable references, not fragile absolute filesystem paths.
 
-## 3. Context packaging
+### 3. Context packaging
 
 QMD then returns content in a form useful for the caller.
 
