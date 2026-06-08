@@ -8,7 +8,7 @@ bun install
 bun link
 ```
 
-This makes the `qmd` command available in your shell (see CLAUDE.md: Development).
+This makes the `qmd` command available in your shell.
 
 ## How do I index my first folder?
 1. Add a collection:
@@ -24,7 +24,12 @@ This makes the `qmd` command available in your shell (see CLAUDE.md: Development
    qmd embed
    ```
 
-`qmd update` scans the collection, hashes contents, builds the FTS index, and deactivates missing files. `qmd embed` creates vector embeddings for each chunk (see cli-explorer: `collection add`, `update`, `embed`; store-explorer: Indexing).
+`qmd update` scans the collection, hashes contents, builds the FTS index, and deactivates missing files. `qmd embed` creates vector embeddings for each chunk.
+
+Key details:
+- `collection add` records the folder, name, and file mask in config.
+- `update` refreshes document metadata, content rows, and FTS rows.
+- `embed` only processes chunks missing current embedding fingerprint.
 
 ## How do I search?
 - **Keyword (BM25):**
@@ -40,7 +45,12 @@ This makes the `qmd` command available in your shell (see CLAUDE.md: Development
   qmd query "refactoring large react components"
   ```
 
-Hybrid search automatically expands your query, runs both lexical and vector searches, fuses the results, and reranks them (see cli-explorer: `search`, `vsearch`, `query`; store-explorer: Hybrid Search).
+Hybrid search automatically expands your query, runs both lexical and vector searches, fuses the results, and reranks them.
+
+Key details:
+- `search` uses FTS5/BM25 only and does not call an LLM.
+- `vsearch` embeds the query and compares it against stored chunk vectors.
+- `query` combines both signals with RRF and optional reranking.
 
 ## How do I retrieve a document?
 By virtual path:
@@ -64,7 +74,7 @@ qmd multi-get "notes/*.md"
 qmd multi-get "#abc123, #def456"
 ```
 
-Oversized files are skipped rather than failing the command (see cli-explorer: `get`, `multi-get`; store-explorer: Docids).
+Oversized files are skipped rather than failing the command. Docids are the first 6 characters of the content hash and work with `get` and `multi-get`.
 
 ## How do I add context to improve search?
 Global context (applies to all collections):
@@ -82,7 +92,12 @@ Virtual path context:
 qmd context add qmd://notes/2024 "Journal entries from 2024."
 ```
 
-Context is inherited by longest-prefix match and falls back to global (see cli-explorer: `context`; db-coll-explorer: Context System).
+Context is inherited by longest-prefix match and falls back to global.
+
+Key details:
+- More specific path context wins over collection-wide context.
+- Global `/` context applies when no collection/path context matches.
+- Context is stored separately from document content and can be updated independently.
 
 ## How do I update the index when files change?
 Re-index everything:
@@ -95,7 +110,12 @@ Then embed any new or changed content:
 qmd embed
 ```
 
-If a collection has a configured `update` shell command, `qmd update` runs it before re-indexing (see cli-explorer: `update`; store-explorer: Indexing).
+If a collection has a configured `update` shell command, `qmd update` runs it before re-indexing.
+
+Key details:
+- Missing files are marked inactive instead of immediately deleted.
+- Unreferenced content can be removed by maintenance cleanup.
+- Changed files get new content hashes and fresh FTS rows.
 
 ## How do I use the SDK in my code?
 ```ts
@@ -114,7 +134,7 @@ for (const r of results) {
 await store.close();
 ```
 
-The SDK supports DB-only mode (no config source), inline config, and write-through mutations (see sdk-mcp-explorer: SDK Overview).
+The SDK supports DB-only mode, inline config, and write-through mutations for collections and context.
 
 ## How do I use the MCP server?
 - **Stdio** (for clients like Claude Desktop):
@@ -131,7 +151,7 @@ The SDK supports DB-only mode (no config source), inline config, and write-throu
   qmd mcp stop
   ```
 
-The MCP server exposes `query`, `get`, `multi_get`, and `status` tools, plus `qmd://{+path}` resources (see cli-explorer: `mcp`; sdk-mcp-explorer: MCP Overview).
+The MCP server exposes `query`, `get`, `multi_get`, and `status` tools, plus `qmd://{+path}` resources.
 
 ## What output formats are supported?
 `json`, `csv`, `md`, `xml`, and `files`. Use `--format`:
@@ -142,7 +162,12 @@ qmd query "auth flow" --format md
 qmd multi-get "notes/*.md" --format files
 ```
 
-Legacy boolean flags `--json`, `--csv`, `--md`, `--xml`, `--files` still work but are undocumented (see cli-explorer: Output Format Pipeline).
+Legacy boolean flags `--json`, `--csv`, `--md`, `--xml`, and `--files` still work, but `--format` is the clearer interface.
 
 ## What are virtual paths?
-Virtual paths are canonical identifiers of the form `qmd://collection/path/to/file.md`. They appear in search results, `get` output, and MCP resources. You can use them anywhere a file path is accepted (see cli-explorer: Virtual path resolution; store-explorer: Virtual Paths).
+Virtual paths are canonical identifiers of the form `qmd://collection/path/to/file.md`. They appear in search results, `get` output, and MCP resources. You can use them anywhere a file path is accepted.
+
+Key details:
+- Collection name is the first path segment.
+- Paths normalize to slash-separated, collection-relative file paths.
+- Virtual paths avoid ambiguity when multiple collections contain same filename.
